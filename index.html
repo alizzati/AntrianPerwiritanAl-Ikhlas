@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Pengambilan Nomor Antrian</title>
+</head>
+
+<body>
+    <h2>Form Antrian</h2>
+
+    <form id="form">
+        <label>Nama:</label><br>
+        <input type="text" id="nama" required><br><br>
+
+        <label>Nomor Telepon:</label><br>
+        <input type="number" id="telepon" required><br><br>
+
+        <label>Alamat:</label><br>
+        <input type="text" id="alamat" required><br><br>
+
+        <button type="submit">Ambil Nomor Antrian</button>
+    </form>
+
+    <div id="hasil" style="margin-top:20px;font-weight:bold;"></div>
+
+    <script>
+        const url = 'https://script.google.com/macros/s/AKfycbxa44Pk2GSBuP2R3GtjLPL33DS90thm_30sQoDzJj6xQ9DVmtaOr_ccVBV9SpBKyPNp/exec';
+
+        document.getElementById('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const payload = {
+                nama: document.getElementById('nama').value,
+                telepon: document.getElementById('telepon').value,
+                alamat: document.getElementById('alamat').value
+            };
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ← header “simple”
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error(res.statusText);
+
+                const data = await res.json();
+                document.getElementById('hasil').textContent =
+                    `Nomor antrian kamu adalah: ${data.antrian}`;
+            } catch (err) {
+                console.error(err);
+                document.getElementById('hasil').textContent = 'Gagal menyimpan data.';
+            }
+        });
+    </script>
+
+
+</body>
+
+</html>
