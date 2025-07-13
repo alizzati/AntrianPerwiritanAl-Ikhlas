@@ -1,91 +1,112 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-  <meta charset="utf-8">
-  <title>Pengambilan Nomor Antrian</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    label { font-weight: 600; }
-    input, button { padding: 6px 10px; font-size: 14px; }
-    button[disabled] { opacity: .6; cursor: not-allowed; }
-    #hasil { margin-top: 20px; font-weight: bold; }
-  </style>
+    <meta charset="utf-8">
+    <title>Pengambilan Nomor Antrian</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        input,
+        button {
+            padding: 6px 10px;
+            font-size: 14px;
+        }
+
+        button[disabled] {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        #hasil {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body>
-  <h2>Form Antrian</h2>
+    <h2>Form Antrian</h2>
 
-  <form id="form">
-    <label for="nama">Nama:</label><br>
-    <input type="text" id="nama" required><br><br>
+    <form id="form">
+        <label for="nama">Nama:</label><br>
+        <input type="text" id="nama" required><br><br>
 
-    <label for="telepon">Nomor Telepon:</label><br>
-    <!-- ganti type="tel" agar 0/+ tidak terpotong -->
-    <input type="tel" id="telepon" required><br><br>
+        <label for="telepon">Nomor Telepon:</label><br>
+        <!-- ganti type="tel" agar 0/+ tidak terpotong -->
+        <input type="tel" id="telepon" required><br><br>
 
-    <label for="alamat">Alamat:</label><br>
-    <input type="text" id="alamat" required><br><br>
+        <label for="alamat">Alamat:</label><br>
+        <input type="text" id="alamat" required><br><br>
 
-    <button id="submitBtn" type="submit">Ambil Nomor Antrian</button>
-  </form>
+        <button id="submitBtn" type="submit">Ambil Nomor Antrian</button>
+    </form>
 
-  <div id="hasil"></div>
+    <div id="hasil"></div>
 
-  <script>
-    // URL Web App hasil "Deploy > Manage deployments"
-    const url = 'https://script.google.com/macros/s/AKfycbyjcAJI_SzRf9OoJviwB9t1pdpJPbjW3vrb-gcXEzG4ojcxAN8YPMgAzdLyksK5NYpj/exec';
+    <script>
+        // URL Web App hasil "Deploy > Manage deployments"
+        const url = 'https://script.google.com/macros/s/AKfycbxa44Pk2GSBuP2R3GtjLPL33DS90thm_30sQoDzJj6xQ9DVmtaOr_ccVBV9SpBKyPNp/exec';
 
-    const form   = document.getElementById('form');
-    const hasil  = document.getElementById('hasil');
-    const submit = document.getElementById('submitBtn');
+        const form = document.getElementById('form');
+        const hasil = document.getElementById('hasil');
+        const submit = document.getElementById('submitBtn');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-      // siapkan payload
-      const payload = {
-        nama:    document.getElementById('nama').value.trim(),
-        telepon: document.getElementById('telepon').value.trim(),
-        alamat:  document.getElementById('alamat').value.trim()
-      };
+            // siapkan payload
+            const payload = {
+                nama: document.getElementById('nama').value.trim(),
+                telepon: document.getElementById('telepon').value.trim(),
+                alamat: document.getElementById('alamat').value.trim()
+            };
 
-      // validasi sederhana
-      if (!payload.nama || !payload.telepon || !payload.alamat) {
-        hasil.textContent = 'Semua kolom wajib diisi!';
-        return;
-      }
+            // validasi sederhana
+            if (!payload.nama || !payload.telepon || !payload.alamat) {
+                hasil.textContent = 'Semua kolom wajib diisi!';
+                return;
+            }
 
-      // UI: disable tombol & tampilkan pesan loading
-      submit.disabled = true;                                  // ⬅ NEW
-      hasil.textContent = 'Mengirim...';                       // ⬅ NEW
+            // UI: disable tombol & tampilkan pesan loading
+            submit.disabled = true;                                  // ⬅ NEW
+            hasil.textContent = 'Mengirim...';                       // ⬅ NEW
 
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // simple‑request ⇒ tanpa pre‑flight
-          body: JSON.stringify(payload)
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // simple‑request ⇒ tanpa pre‑flight
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error(res.statusText);
+
+                // ── kadang GAS merespons text/plain ──
+                const raw = await res.text();                         // ⬅ NEW
+                console.log('Respon mentah:', raw);                    // ⬅ NEW (bisa dihapus)
+                const data = JSON.parse(raw);                          // ⬅ NEW
+
+                if (data && data.status === 'sukses') {
+                    hasil.textContent = `Nomor antrian kamu adalah: ${data.antrian}`;
+                    form.reset();                                        // kosongkan form
+                } else {
+                    throw new Error('Format respon tidak dikenal');
+                }
+            } catch (err) {
+                console.error(err);
+                hasil.textContent = 'Gagal menyimpan data.';
+            } finally {
+                submit.disabled = false;                               // ⬅ NEW
+            }
         });
-
-        if (!res.ok) throw new Error(res.statusText);
-
-        // ── kadang GAS merespons text/plain ──
-        const raw  = await res.text();                         // ⬅ NEW
-        console.log('Respon mentah:', raw);                    // ⬅ NEW (bisa dihapus)
-        const data = JSON.parse(raw);                          // ⬅ NEW
-
-        if (data && data.status === 'sukses') {
-          hasil.textContent = `Nomor antrian kamu adalah: ${data.antrian}`;
-          form.reset();                                        // kosongkan form
-        } else {
-          throw new Error('Format respon tidak dikenal');
-        }
-      } catch (err) {
-        console.error(err);
-        hasil.textContent = 'Gagal menyimpan data.';
-      } finally {
-        submit.disabled = false;                               // ⬅ NEW
-      }
-    });
-  </script>
+    </script>
 </body>
+
 </html>
